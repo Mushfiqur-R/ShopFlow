@@ -1,0 +1,200 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+ //output   = "../generated/prisma"
+}
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+// ==============================
+// USER
+// ==============================
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders Order[]
+
+  @@map("users")
+}
+
+
+// ==============================
+// PRODUCT
+// ==============================
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  price       Decimal  @db.Decimal(10, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  inventory Inventory?
+  orderItems OrderItem[]
+
+  @@map("products")
+}
+
+
+// ==============================
+// INVENTORY
+// ==============================
+
+model Inventory {
+  id        Int @id @default(autoincrement())
+  productId Int @unique
+
+  quantity Int @default(0)
+  reserved Int @default(0)
+
+  product Product @relation(fields: [productId],references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("inventory")
+}
+
+
+// ==============================
+// ORDER
+// ==============================
+
+model Order {
+  id          Int         @id @default(autoincrement())
+  userId      Int
+  totalAmount Decimal     @db.Decimal(10, 2)
+  status      OrderStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId],references: [id])
+
+  items OrderItem[]
+
+  payment Payment?
+
+  notifications Notification[]
+
+  @@index([userId])
+  @@index([status])
+
+  @@map("orders")
+}
+
+
+// ==============================
+// ORDER ITEM
+// ==============================
+
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  orderId   Int
+  productId Int
+  quantity  Int
+  price     Decimal @db.Decimal(10, 2)
+
+  order Order @relation(fields: [orderId],references: [id],onDelete: Cascade)
+
+  product Product @relation(fields: [productId],references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+
+  @@map("order_items")
+}
+
+
+// ==============================
+// PAYMENT
+// ==============================
+
+model Payment {
+  id        Int     @id @default(autoincrement())
+  orderId   Int     @unique
+  amount    Decimal @db.Decimal(10, 2)
+
+  status PaymentStatus @default(PENDING)
+
+  transactionId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  order Order @relation(fields: [orderId],references: [id])
+
+  @@map("payments")
+}
+
+
+// ==============================
+// NOTIFICATION
+// ==============================
+
+model Notification {
+  id      Int @id @default(autoincrement())
+  orderId Int
+
+  type    NotificationType
+  message String
+
+  status NotificationStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  sentAt    DateTime?
+
+  order Order @relation(fields: [orderId],references: [id])
+
+  @@index([orderId])
+  @@index([status])
+
+  @@map("notifications")
+}
+
+
+// ==============================
+// ENUMS
+// ==============================
+
+enum OrderStatus {
+  PENDING
+  PAYMENT_PROCESSING
+  PAID
+  CONFIRMED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum NotificationType {
+  ORDER_CREATED
+  PAYMENT_SUCCESS
+  PAYMENT_FAILED
+  ORDER_CANCELLED
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
