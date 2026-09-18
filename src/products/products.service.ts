@@ -5,7 +5,7 @@ import { UpdateProductDto } from './dto/update-product.dto';
 
 @Injectable()
 export class ProductsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async create(createProductDto: CreateProductDto) {
     return this.prisma.product.create({
@@ -19,7 +19,13 @@ export class ProductsService {
   async findAll() {
     return this.prisma.product.findMany({
       include: {
-        inventory: true,
+        inventory: {
+          select: {
+            id: true,
+            quantity: true,
+            reserved: true,
+          }
+        }
       },
       orderBy: { createdAt: 'desc' },
     });

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { CartModule } from './cart/cart.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { OrdersModule } from './orders/orders.module';
@@ -13,6 +14,7 @@ import { UsersModule } from './users/users.module';
     UsersModule,
     ProductsModule,
     InventoryModule,
+    CartModule,
     OrdersModule,
     PaymentsModule,
     NotificationsModule,

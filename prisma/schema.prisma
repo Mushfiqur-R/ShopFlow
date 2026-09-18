@@ -26,6 +26,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   orders Order[]
+  cart   Cart?
 
   @@map("users")
 }
@@ -44,10 +45,50 @@ model Product {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  inventory Inventory?
+  inventory  Inventory?
   orderItems OrderItem[]
+  cartItems  CartItem[]
 
   @@map("products")
+}
+
+
+// ==============================
+// CART
+// ==============================
+
+model Cart {
+  id        Int        @id @default(autoincrement())
+  userId    Int        @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items CartItem[]
+
+  @@map("carts")
+}
+
+
+// ==============================
+// CART ITEM
+// ==============================
+
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  cartId    Int
+  productId Int
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([cartId, productId])
+  @@index([cartId])
+  @@index([productId])
+  @@map("cart_items")
 }
 
 
